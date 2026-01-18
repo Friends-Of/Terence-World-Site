@@ -2,21 +2,45 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Terence Brasch</title>
-    <meta name="description" content="Terence Brasch — creative strategist and community leader in Portland, Oregon." />
+    <meta
+      name="description"
+      content="Terence Brasch - senior frontend engineer and creative technologist."
+    />
+    <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body style="max-width: 720px; margin: 48px auto; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; line-height: 1.5;">
-    <h1>Terence Brasch</h1>
-    <p>A guided interface to understand my work, how I think, and whether there’s alignment. A new type of portfolio to interface with my work and thinking.</p>
+  <body>
+    <div class="scene">
+      <main class="portal-shell">
+        <section class="portal" aria-label="Chat portal">
+          <div class="portal-body">
+            <p class="portal-message system">
+              Welcome. This portal is a quiet threshold to my work and approach.
+              Ask a question to begin.
+            </p>
+          </div>
 
-    <h2>Start here</h2>
-    <ul>
-      <li><a href="./identity/bio_professional.md">Professional bio</a></li>
-      <li><a href="./projects/Fireside/overview.md">Fireside overview</a></li>
-      <li><a href="./system/system_prompt.md">System prompt</a></li>
-    </ul>
+          <form class="portal-input" action="#" method="get">
+            <label class="sr-only" for="prompt">Ask a question</label>
+            <input
+              id="prompt"
+              name="prompt"
+              type="text"
+              placeholder="Ask about Fireside, Goodies, or fit..."
+            />
+            <button type="submit">Ask</button>
+          </form>
+        </section>
 
-    <p><em>More coming soon.</em></p>
+        <div class="suggestions" role="list">
+          <button class="chip" role="listitem" type="button">What is Fireside?</button>
+          <button class="chip" role="listitem" type="button">Goodies overview</button>
+          <button class="chip" role="listitem" type="button">Where do you fit?</button>
+          <button class="chip" role="listitem" type="button">What have you built?</button>
+          <button class="chip" role="listitem" type="button">How do you work?</button>
+        </div>
+      </main>
+    </div>
   </body>
 </html>

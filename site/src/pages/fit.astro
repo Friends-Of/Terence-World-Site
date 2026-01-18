@@ -1,10 +1,41 @@
-﻿<html lang="en">
-  <head>
-    <title>Fit — Terence Brasch</title>
-  </head>
-  <body>
-    <p><a href="/">← Home</a></p>
-    <h1>Fit</h1>
-    <p>Where this work aligns, and where it does not.</p>
-  </body>
-</html>
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="Fit" description="Where this work aligns, and where it does not.">
+  <section class="panel">
+    <div class="meta">Fit</div>
+    <h1>Where the work fits</h1>
+    <p>
+      I work best in environments that value clarity, constraints, and tangible outcomes.
+      Fit is about shared pace, not just shared goals.
+    </p>
+  </section>
+
+  <section class="grid" style="margin-top: 24px;">
+    <div class="card">
+      <h2>Strong fit</h2>
+      <ul>
+        <li>Small, accountable teams with clear decision owners.</li>
+        <li>Product and platform work grounded in real user behavior.</li>
+        <li>Design systems that prioritize performance and readability.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Situational fit</h2>
+      <ul>
+        <li>Early-stage teams that need structure without heavy process.</li>
+        <li>Legacy UI modernization when scope is tightly framed.</li>
+        <li>Experimental interfaces that still ship within deadlines.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Poor fit</h2>
+      <ul>
+        <li>High-churn, meeting-heavy environments with no ownership.</li>
+        <li>Projects driven by hype without a durable use case.</li>
+        <li>Work that optimizes for volume rather than clarity.</li>
+      </ul>
+    </div>
+  </section>
+</Base>

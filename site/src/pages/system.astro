@@ -1,10 +1,33 @@
-﻿<html lang="en">
-  <head>
-    <title>System Rules — Terence Brasch</title>
-  </head>
-  <body>
-    <p><a href="/">← Home</a></p>
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="System" description="How this system is intended to be read, queried, and governed.">
+  <section class="panel">
+    <div class="meta">System</div>
     <h1>System rules</h1>
-    <p>How this system is intended to be read, queried, and governed.</p>
-  </body>
-</html>
+    <p>
+      This site is organized to be navigable, fast, and legible. The structure is simple
+      on purpose so that content can evolve without breaking the surface.
+    </p>
+  </section>
+
+  <section class="panel" style="margin-top: 24px;">
+    <h2>Operating principles</h2>
+    <ul>
+      <li>Document decisions so future work can be traced and reused.</li>
+      <li>Prefer small surfaces with deep clarity over broad catalogs.</li>
+      <li>Keep the interface quiet so the work stays readable.</li>
+      <li>Ship early, then refine in public with measurable outcomes.</li>
+    </ul>
+  </section>
+
+  <section class="panel" style="margin-top: 24px;">
+    <h2>How to use this space</h2>
+    <ul>
+      <li>Start at the project pages to understand active systems.</li>
+      <li>Use Fit to validate alignment before engagements.</li>
+      <li>Return here when the structure or rules change.</li>
+    </ul>
+  </section>
+</Base>

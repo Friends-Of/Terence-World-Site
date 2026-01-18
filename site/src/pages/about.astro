@@ -1,16 +1,12 @@
 ---
-import Bio from '../content/identity/bio_professional.md';
+import Base from "../layouts/Base.astro";
+import Bio from "../content/identity/bio_professional.md";
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>About — Terence Brasch</title>
-  </head>
-  <body style="max-width:760px;margin:64px auto;padding:0 20px;line-height:1.6;font-family:ui-sans-serif,system-ui;">
-    <p><a href="/">← Home</a></p>
-    <h1>Professional Bio</h1>
+<Base title="About" description="Professional bio for Terence Brasch.">
+  <section class="panel">
+    <div class="meta">Professional Bio</div>
+    <h1>About</h1>
     <Bio />
-  </body>
-</html>
+  </section>
+</Base>

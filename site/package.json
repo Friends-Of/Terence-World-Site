@@ -4,12 +4,16 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
+    "rag:build": "node scripts/build_rag_index.mjs",
+    "prebuild": "npm run rag:build",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.16.11"
+    "astro": "^5.16.11",
+    "glob": "^11.0.0",
+    "openai": "^4.62.0"
   },
   "devDependencies": {
     "@astrojs/vercel": "^9.0.4"

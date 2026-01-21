@@ -327,15 +327,9 @@ import Base from "../layouts/Base.astro";
   <script is:inline>
     const form = document.querySelector(".portal-input");
     const input = document.querySelector("#prompt");
+    const submitButton = document.querySelector(".portal-input button[type='submit']");
     const messages = document.querySelector(".messages");
     const chips = document.querySelectorAll(".chip");
-
-    const ROUTES = {
-      fireside: "/projects/fireside",
-      goodies: "/projects/goodies",
-      fit: "/fit",
-      system: "/system",
-    };
 
     const appendMessage = (container, { role, text, links = [] }) => {
       const row = document.createElement("div");
@@ -369,35 +363,38 @@ import Base from "../layouts/Base.astro";
       container.appendChild(row);
     };
 
-    const routeReply = (prompt) => {
-      const lower = prompt.toLowerCase();
-      if (lower.includes("fireside")) {
-        return {
-          text: "Fireside is a small, in-person creative technology practice for focused work.",
-          links: [{ href: ROUTES.fireside, label: "Open Fireside" }],
-        };
+    const setBusy = (busy) => {
+      if (input) input.disabled = busy;
+      if (submitButton) submitButton.disabled = busy;
+      if (form) form.setAttribute("aria-busy", busy ? "true" : "false");
+    };
+
+    const sendMessage = async (prompt) => {
+      if (!messages) return;
+      setBusy(true);
+      try {
+        const response = await fetch("/api/chat.json", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: prompt, mode: "default" }),
+        });
+        if (!response.ok) {
+          throw new Error("Request failed");
+        }
+        const data = await response.json();
+        appendMessage(messages, {
+          role: "system",
+          text: typeof data.answer === "string" ? data.answer : "Response unavailable.",
+          links: Array.isArray(data.links) ? data.links : [],
+        });
+      } catch (error) {
+        appendMessage(messages, {
+          role: "system",
+          text: "Something went wrong. Try again.",
+        });
+      } finally {
+        setBusy(false);
       }
-      if (lower.includes("goodies")) {
-        return {
-          text: "Goodies is a live retail system where brand and operations meet.",
-          links: [{ href: ROUTES.goodies, label: "Open Goodies" }],
-        };
-      }
-      if (lower.includes("fit") || lower.includes("role")) {
-        return {
-          text: "Fit outlines where my work aligns and where it doesn't.",
-          links: [{ href: ROUTES.fit, label: "Open Fit" }],
-        };
-      }
-      if (lower.includes("system")) {
-        return {
-          text: "System notes describe how this work is structured.",
-          links: [{ href: ROUTES.system, label: "Open System" }],
-        };
-      }
-      return {
-        text: "I can answer about Fireside, Goodies, Fit, or System. Try one of the suggestions.",
-      };
     };
 
     chips.forEach((chip) => {
@@ -414,10 +411,9 @@ import Base from "../layouts/Base.astro";
       const prompt = input.value.trim();
       if (!prompt) return;
       appendMessage(messages, { role: "user", text: `You: ${prompt}` });
-      const reply = routeReply(prompt);
-      appendMessage(messages, { role: "system", text: reply.text, links: reply.links });
       input.value = "";
       input.focus();
+      sendMessage(prompt);
     });
   </script>
 </Base>

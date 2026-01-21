@@ -1,0 +1,26 @@
+import { e as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../../chunks/astro/server_B4R6OevK.mjs';
+import 'piccolore';
+import { $ as $$Base } from '../../chunks/Base_BxVEuGCA.mjs';
+export { renderers } from '../../renderers.mjs';
+
+const $$Fireside = createComponent(($$result, $$props, $$slots) => {
+  return renderTemplate`${renderComponent($$result, "Base", $$Base, { "title": "Fireside", "description": "In-person creative technology practice and research environment." }, { "default": ($$result2) => renderTemplate` ${maybeRenderHead()}<section class="panel"> <div class="meta">Project</div> <h1>Fireside</h1> <p>
+Fireside is a physical room for work that needs focus, conversation, and real tools on
+      the table. It is not a studio for volume output; it is a place for decisions that shape
+      product and system direction.
+</p> </section> <section class="grid" style="margin-top: 24px;"> <div class="card"> <h2>Operating mode</h2> <ul> <li>In-person sessions, by invitation or scheduled block.</li> <li>Small group size to keep accountability and clarity.</li> <li>Artifacts over abstraction: prototypes, diagrams, and tests.</li> </ul> </div> <div class="card"> <h2>Decisions</h2> <ul> <li>No speculative commitments without a next action.</li> <li>Practice over presentation, outcomes over deck polish.</li> <li>Documentation created during the work, not after.</li> </ul> </div> <div class="card"> <h2>Proof</h2> <ul> <li>Weekly research blocks with monthly reviews.</li> <li>Session outputs: written decisions or repo changes.</li> <li>Artifacts archived with date and owner for traceability.</li> </ul> </div> </section> ` })}`;
+}, "C:/dev/Terence-World-Site/site/src/pages/projects/fireside.astro", void 0);
+
+const $$file = "C:/dev/Terence-World-Site/site/src/pages/projects/fireside.astro";
+const $$url = "/projects/fireside";
+
+const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  default: $$Fireside,
+  file: $$file,
+  url: $$url
+}, Symbol.toStringTag, { value: 'Module' }));
+
+const page = () => _page;
+
+export { page };

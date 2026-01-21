@@ -1,0 +1,423 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base
+  title="Terence Brasch"
+  description="A calm portal to Terence Brasch's work and approach."
+  minimal={true}
+>
+  <style is:global>
+    :root {
+      color-scheme: dark;
+      --bg-deep: #0e1110;
+      --bg-forest: #17201b;
+      --bg-moss: #243129;
+      --fog: rgba(210, 220, 210, 0.08);
+      --text: #e7e3d9;
+      --text-muted: #c6c0b5;
+      --accent: #c7a16a;
+      --accent-soft: rgba(199, 161, 106, 0.28);
+      --portal: rgba(16, 22, 18, 0.84);
+      --portal-edge: rgba(210, 220, 210, 0.16);
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: radial-gradient(circle at 20% 20%, rgba(90, 110, 94, 0.25), transparent 55%),
+        linear-gradient(180deg, var(--bg-moss), var(--bg-forest) 56%, var(--bg-deep) 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 3px 3px;
+      opacity: 0.35;
+      pointer-events: none;
+      mix-blend-mode: soft-light;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 40%, var(--fog), transparent 60%);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    main {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 64px 24px;
+    }
+
+    .wordmark {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: rgba(231, 227, 217, 0.5);
+    }
+
+    .portal-shell {
+      width: min(720px, 100%);
+      display: grid;
+      gap: 18px;
+    }
+
+    .portal {
+      position: relative;
+      background: radial-gradient(circle at 50% 15%, rgba(70, 88, 74, 0.35), transparent 60%),
+        var(--portal);
+      border-radius: 26px;
+      border: 1px solid var(--portal-edge);
+      padding: 28px 28px 22px;
+      box-shadow: 0 28px 70px rgba(2, 4, 3, 0.65);
+    }
+
+    .portal::before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(210, 220, 210, 0.06);
+      box-shadow: inset 0 0 22px rgba(6, 10, 7, 0.7);
+      pointer-events: none;
+    }
+
+    .portal-body {
+      position: relative;
+      z-index: 1;
+    }
+
+    .messages {
+      display: grid;
+      gap: 12px;
+    }
+
+    .msg {
+      display: grid;
+    }
+
+    .msg__bubble {
+      background: rgba(14, 18, 15, 0.4);
+      border-radius: 16px;
+      padding: 12px 16px;
+      border: 1px solid rgba(210, 220, 210, 0.08);
+    }
+
+    .msg__bubble p {
+      margin: 0;
+      font-size: 1.02rem;
+      line-height: 1.65;
+    }
+
+    .msg--system .msg__bubble p {
+      font-size: 0.92rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .msg__links {
+      margin: 10px 0 0;
+      padding-left: 16px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .msg__links a {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(199, 161, 106, 0.4);
+    }
+
+    .msg__links a:hover,
+    .msg__links a:focus-visible {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .noscript-note {
+      margin: 8px 0 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .portal-input {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+    }
+
+    .portal-input input {
+      background: rgba(10, 14, 12, 0.7);
+      border: 1px solid rgba(210, 220, 210, 0.2);
+      border-radius: 18px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      transition: box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .portal-input input::placeholder {
+      color: rgba(231, 227, 217, 0.55);
+    }
+
+    .portal-input input:focus {
+      border-color: rgba(199, 161, 106, 0.6);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .portal-input button {
+      background: rgba(199, 161, 106, 0.14);
+      border: 1px solid rgba(199, 161, 106, 0.5);
+      color: var(--text);
+      padding: 12px 18px;
+      border-radius: 16px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+
+    .portal-input button:hover {
+      background: rgba(199, 161, 106, 0.22);
+      box-shadow: 0 0 18px rgba(199, 161, 106, 0.2);
+    }
+
+    .portal-input button:active {
+      transform: translateY(1px);
+    }
+
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: flex-start;
+      padding-left: 6px;
+    }
+
+    .chip {
+      background: rgba(16, 22, 18, 0.7);
+      border: 1px solid rgba(210, 220, 210, 0.2);
+      color: var(--text);
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+      animation: drift 18s ease-in-out infinite;
+    }
+
+    .chip:nth-child(2) {
+      animation-delay: -4s;
+    }
+
+    .chip:nth-child(3) {
+      animation-delay: -8s;
+    }
+
+    .chip:nth-child(4) {
+      animation-delay: -12s;
+    }
+
+    .chip:nth-child(5) {
+      animation-delay: -16s;
+    }
+
+    .chip:hover {
+      transform: translateY(-2px);
+      border-color: rgba(199, 161, 106, 0.45);
+      box-shadow: 0 8px 20px rgba(199, 161, 106, 0.18);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    @keyframes drift {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-5px);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .portal {
+        padding: 24px 22px 20px;
+      }
+
+      .portal-input {
+        grid-template-columns: 1fr;
+      }
+
+      .portal-input button {
+        width: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .chip {
+        animation: none;
+      }
+    }
+  </style>
+
+  <div class="wordmark">Terence Brasch</div>
+
+  <section class="portal-shell" aria-label="Chat portal">
+    <div class="portal">
+      <div class="portal-body">
+        <div class="messages" aria-live="polite">
+          <div class="msg msg--system">
+            <div class="msg__bubble">
+              <p>
+                Welcome. This portal is a quiet threshold to my work and approach.
+                Ask a question to begin.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form class="portal-input" action="" method="post">
+        <label class="sr-only" for="prompt">Ask a question</label>
+        <input id="prompt" name="prompt" type="text" placeholder="Ask about Fireside, Goodies, or fit..." />
+        <button type="submit">Ask</button>
+      </form>
+    </div>
+
+    <div class="suggestions" role="list">
+      <button class="chip" role="listitem" type="button">What is Fireside?</button>
+      <button class="chip" role="listitem" type="button">Goodies overview</button>
+      <button class="chip" role="listitem" type="button">Where do you fit?</button>
+      <button class="chip" role="listitem" type="button">What have you built?</button>
+      <button class="chip" role="listitem" type="button">How do you work?</button>
+    </div>
+    <noscript>
+      <p class="noscript-note">JavaScript is required for chat responses.</p>
+    </noscript>
+  </section>
+
+  <script is:inline>
+    const form = document.querySelector(".portal-input");
+    const input = document.querySelector("#prompt");
+    const messages = document.querySelector(".messages");
+    const chips = document.querySelectorAll(".chip");
+
+    const ROUTES = {
+      fireside: "/projects/fireside",
+      goodies: "/projects/goodies",
+      fit: "/fit",
+      system: "/system",
+    };
+
+    const appendMessage = (container, { role, text, links = [] }) => {
+      const row = document.createElement("div");
+      row.className = `msg msg--${role}`;
+
+      const bubble = document.createElement("div");
+      bubble.className = "msg__bubble";
+
+      const p = document.createElement("p");
+      p.textContent = text;
+      bubble.appendChild(p);
+
+      if (links.length) {
+        const ul = document.createElement("ul");
+        ul.className = "msg__links";
+
+        for (const { href, label } of links) {
+          const li = document.createElement("li");
+          const a = document.createElement("a");
+          a.href = href;
+          a.textContent = label;
+          a.rel = "noopener noreferrer";
+          li.appendChild(a);
+          ul.appendChild(li);
+        }
+
+        bubble.appendChild(ul);
+      }
+
+      row.appendChild(bubble);
+      container.appendChild(row);
+    };
+
+    const routeReply = (prompt) => {
+      const lower = prompt.toLowerCase();
+      if (lower.includes("fireside")) {
+        return {
+          text: "Fireside is a small, in-person creative technology practice for focused work.",
+          links: [{ href: ROUTES.fireside, label: "Open Fireside" }],
+        };
+      }
+      if (lower.includes("goodies")) {
+        return {
+          text: "Goodies is a live retail system where brand and operations meet.",
+          links: [{ href: ROUTES.goodies, label: "Open Goodies" }],
+        };
+      }
+      if (lower.includes("fit") || lower.includes("role")) {
+        return {
+          text: "Fit outlines where my work aligns and where it doesn't.",
+          links: [{ href: ROUTES.fit, label: "Open Fit" }],
+        };
+      }
+      if (lower.includes("system")) {
+        return {
+          text: "System notes describe how this work is structured.",
+          links: [{ href: ROUTES.system, label: "Open System" }],
+        };
+      }
+      return {
+        text: "I can answer about Fireside, Goodies, Fit, or System. Try one of the suggestions.",
+      };
+    };
+
+    chips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        if (!input) return;
+        input.value = chip.textContent.trim();
+        input.focus();
+      });
+    });
+
+    form?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (!input || !messages) return;
+      const prompt = input.value.trim();
+      if (!prompt) return;
+      appendMessage(messages, { role: "user", text: `You: ${prompt}` });
+      const reply = routeReply(prompt);
+      appendMessage(messages, { role: "system", text: reply.text, links: reply.links });
+      input.value = "";
+      input.focus();
+    });
+  </script>
+</Base>

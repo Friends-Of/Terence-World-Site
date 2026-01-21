@@ -103,17 +103,58 @@ import Base from "../layouts/Base.astro";
       z-index: 1;
     }
 
-    .portal-message {
+    .messages {
+      display: grid;
+      gap: 12px;
+    }
+
+    .msg {
+      display: grid;
+    }
+
+    .msg__bubble {
+      background: rgba(14, 18, 15, 0.4);
+      border-radius: 16px;
+      padding: 12px 16px;
+      border: 1px solid rgba(210, 220, 210, 0.08);
+    }
+
+    .msg__bubble p {
       margin: 0;
       font-size: 1.02rem;
       line-height: 1.65;
     }
 
-    .portal-message.system {
+    .msg--system .msg__bubble p {
       font-size: 0.92rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--text-muted);
+    }
+
+    .msg__links {
+      margin: 10px 0 0;
+      padding-left: 16px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .msg__links a {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(199, 161, 106, 0.4);
+    }
+
+    .msg__links a:hover,
+    .msg__links a:focus-visible {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .noscript-note {
+      margin: 8px 0 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
     }
 
     .portal-input {
@@ -252,13 +293,19 @@ import Base from "../layouts/Base.astro";
   <section class="portal-shell" aria-label="Chat portal">
     <div class="portal">
       <div class="portal-body">
-        <p class="portal-message system">
-          Welcome. This portal is a quiet threshold to my work and approach.
-          Ask a question to begin.
-        </p>
+        <div class="messages" aria-live="polite">
+          <div class="msg msg--system">
+            <div class="msg__bubble">
+              <p>
+                Welcome. This portal is a quiet threshold to my work and approach.
+                Ask a question to begin.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <form class="portal-input" action="#" method="get">
+      <form class="portal-input" action="" method="post">
         <label class="sr-only" for="prompt">Ask a question</label>
         <input id="prompt" name="prompt" type="text" placeholder="Ask about Fireside, Goodies, or fit..." />
         <button type="submit">Ask</button>
@@ -272,5 +319,105 @@ import Base from "../layouts/Base.astro";
       <button class="chip" role="listitem" type="button">What have you built?</button>
       <button class="chip" role="listitem" type="button">How do you work?</button>
     </div>
+    <noscript>
+      <p class="noscript-note">JavaScript is required for chat responses.</p>
+    </noscript>
   </section>
+
+  <script is:inline>
+    const form = document.querySelector(".portal-input");
+    const input = document.querySelector("#prompt");
+    const messages = document.querySelector(".messages");
+    const chips = document.querySelectorAll(".chip");
+
+    const ROUTES = {
+      fireside: "/projects/fireside",
+      goodies: "/projects/goodies",
+      fit: "/fit",
+      system: "/system",
+    };
+
+    const appendMessage = (container, { role, text, links = [] }) => {
+      const row = document.createElement("div");
+      row.className = `msg msg--${role}`;
+
+      const bubble = document.createElement("div");
+      bubble.className = "msg__bubble";
+
+      const p = document.createElement("p");
+      p.textContent = text;
+      bubble.appendChild(p);
+
+      if (links.length) {
+        const ul = document.createElement("ul");
+        ul.className = "msg__links";
+
+        for (const { href, label } of links) {
+          const li = document.createElement("li");
+          const a = document.createElement("a");
+          a.href = href;
+          a.textContent = label;
+          a.rel = "noopener noreferrer";
+          li.appendChild(a);
+          ul.appendChild(li);
+        }
+
+        bubble.appendChild(ul);
+      }
+
+      row.appendChild(bubble);
+      container.appendChild(row);
+    };
+
+    const routeReply = (prompt) => {
+      const lower = prompt.toLowerCase();
+      if (lower.includes("fireside")) {
+        return {
+          text: "Fireside is a small, in-person creative technology practice for focused work.",
+          links: [{ href: ROUTES.fireside, label: "Open Fireside" }],
+        };
+      }
+      if (lower.includes("goodies")) {
+        return {
+          text: "Goodies is a live retail system where brand and operations meet.",
+          links: [{ href: ROUTES.goodies, label: "Open Goodies" }],
+        };
+      }
+      if (lower.includes("fit") || lower.includes("role")) {
+        return {
+          text: "Fit outlines where my work aligns and where it doesn't.",
+          links: [{ href: ROUTES.fit, label: "Open Fit" }],
+        };
+      }
+      if (lower.includes("system")) {
+        return {
+          text: "System notes describe how this work is structured.",
+          links: [{ href: ROUTES.system, label: "Open System" }],
+        };
+      }
+      return {
+        text: "I can answer about Fireside, Goodies, Fit, or System. Try one of the suggestions.",
+      };
+    };
+
+    chips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        if (!input) return;
+        input.value = chip.textContent.trim();
+        input.focus();
+      });
+    });
+
+    form?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (!input || !messages) return;
+      const prompt = input.value.trim();
+      if (!prompt) return;
+      appendMessage(messages, { role: "user", text: `You: ${prompt}` });
+      const reply = routeReply(prompt);
+      appendMessage(messages, { role: "system", text: reply.text, links: reply.links });
+      input.value = "";
+      input.focus();
+    });
+  </script>
 </Base>

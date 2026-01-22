@@ -19,6 +19,15 @@ const isRateLimited = (key: string) => {
 };
 
 export const POST: APIRoute = async ({ request, clientAddress }) => {
+  const apiKey = import.meta.env.OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: "Server missing OPENAI_API_KEY" }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
+  }
+
   if (isRateLimited(clientAddress || "unknown")) {
     return new Response(JSON.stringify({ error: "Rate limit exceeded." }), {
       status: 429,

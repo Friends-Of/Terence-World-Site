@@ -378,14 +378,26 @@ import Base from "../layouts/Base.astro";
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: prompt, mode: "default" }),
         });
-        if (!response.ok) {
-          throw new Error("Request failed");
+        let data = null;
+        try {
+          data = await response.json();
+        } catch {
+          data = null;
         }
-        const data = await response.json();
+        if (!response.ok) {
+          const errorText =
+            typeof data?.error === "string" ? data.error : "Something went wrong. Try again.";
+          appendMessage(messages, { role: "system", text: errorText });
+          return;
+        }
+        if (data?.error) {
+          appendMessage(messages, { role: "system", text: data.error });
+          return;
+        }
         appendMessage(messages, {
           role: "system",
-          text: typeof data.answer === "string" ? data.answer : "Response unavailable.",
-          links: Array.isArray(data.links) ? data.links : [],
+          text: typeof data?.answer === "string" ? data.answer : "Response unavailable.",
+          links: Array.isArray(data?.links) ? data.links : [],
         });
       } catch (error) {
         appendMessage(messages, {

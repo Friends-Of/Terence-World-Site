@@ -7,8 +7,23 @@ export type ChatResponse = {
   citations: { id: string; title: string; routeHint: string; excerpt: string }[];
 };
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const chatModel = process.env.OPENAI_CHAT_MODEL || "gpt-4o-mini";
+const getApiKey = () => import.meta.env.OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
+
+let client: OpenAI | null = null;
+
+const getClient = () => {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error("Missing OPENAI_API_KEY");
+  }
+  if (!client) {
+    client = new OpenAI({ apiKey });
+  }
+  return client;
+};
+
+const chatModel =
+  import.meta.env.OPENAI_CHAT_MODEL ?? process.env.OPENAI_CHAT_MODEL ?? "gpt-4o-mini";
 
 const ALLOWLIST = new Map<string, string>([
   ["/projects/fireside", "Fireside"],
@@ -65,7 +80,7 @@ export const generateAnswer = async (query: string, chunks: Chunk[]): Promise<Ch
   const context = buildContext(chunks);
   const userPrompt = `Context:\n${context}\n\nQuestion: ${query}`;
 
-  const completion = await openai.chat.completions.create({
+  const completion = await getClient().chat.completions.create({
     model: chatModel,
     messages: [
       { role: "system", content: systemPrompt },

@@ -16,8 +16,25 @@ type RagIndex = {
   chunks: Chunk[];
 };
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const embedModel = process.env.OPENAI_EMBED_MODEL || "text-embedding-3-small";
+const getApiKey = () => import.meta.env.OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
+
+let client: OpenAI | null = null;
+
+const getClient = () => {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error("Missing OPENAI_API_KEY");
+  }
+  if (!client) {
+    client = new OpenAI({ apiKey });
+  }
+  return client;
+};
+
+const embedModel =
+  import.meta.env.OPENAI_EMBED_MODEL ??
+  process.env.OPENAI_EMBED_MODEL ??
+  "text-embedding-3-small";
 
 const normalize = (text: string) => text.replace(/\s+/g, " ").trim();
 
@@ -38,7 +55,7 @@ const cosineSimilarity = (a: number[], b: number[]) => {
 
 export const embedQuery = async (text: string): Promise<number[]> => {
   const cleaned = normalize(text).slice(0, 2000);
-  const response = await openai.embeddings.create({
+  const response = await getClient().embeddings.create({
     model: embedModel,
     input: cleaned,
   });

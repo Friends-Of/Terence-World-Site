@@ -1,0 +1,7 @@
+name = "terence-world-tollbit-gate"
+main = "src/index.js"
+compatibility_date = "2026-02-19"
+
+[vars]
+TOLLBIT_PAYWALL_URL = "https://tollbit.terence.world/paywall"
+TOLLBIT_RATE_PER_PAGE = "0.01"

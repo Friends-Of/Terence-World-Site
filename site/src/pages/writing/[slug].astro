@@ -1,0 +1,50 @@
+---
+import { getCollection, getEntry } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import { formatDate } from "../../utils/content";
+
+const slug = Astro.params.slug ?? "";
+const post = await getEntry("writing", slug);
+
+if (!post) {
+  return Astro.redirect("/writing");
+}
+
+const projects = await getCollection("projects");
+const relatedProjects = projects.filter((project) => post.data.relatedProjects.includes(project.slug));
+const { Content } = await post.render();
+---
+
+<Base title={post.data.title} description={post.data.summary}>
+  <article class="panel">
+    <p class="meta">Writing</p>
+    <h1>{post.data.title}</h1>
+    <p>{post.data.summary}</p>
+    <div class="pill-row">
+      <span class="pill">{formatDate(post.data.publishedAt)}</span>
+      {post.data.tags.map((tag) => (
+        <span class="pill">#{tag}</span>
+      ))}
+    </div>
+  </article>
+
+  <section class="panel" style="margin-top: 18px">
+    <Content />
+  </section>
+
+  <section class="panel" style="margin-top: 18px">
+    <h2>Related projects</h2>
+    {relatedProjects.length ? (
+      <div class="grid grid-2">
+        {relatedProjects.map((project) => (
+          <a class="card card-link" href={`/projects/${project.slug}`}>
+            <h3>{project.data.title}</h3>
+            <p>{project.data.summary}</p>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <p class="muted">No project links defined yet.</p>
+    )}
+  </section>
+</Base>

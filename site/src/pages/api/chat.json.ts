@@ -2,33 +2,30 @@ import type { APIRoute } from "astro";
 import { search } from "../../rag/retrieval";
 import { generateAnswer } from "../../rag/generate";
 
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX = 12;
-const rateLimit = new Map<string, { count: number; resetAt: number }>();
+const WINDOW_MS = 60_000;
+const MAX_REQUESTS = 14;
+const rateMap = new Map<string, { count: number; resetAt: number }>();
 
-const isRateLimited = (key: string) => {
+const getClientId = (request: Request) =>
+  request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+  request.headers.get("cf-connecting-ip") ||
+  "unknown";
+
+const isRateLimited = (id: string) => {
   const now = Date.now();
-  const entry = rateLimit.get(key);
+  const entry = rateMap.get(id);
   if (!entry || entry.resetAt <= now) {
-    rateLimit.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    rateMap.set(id, { count: 1, resetAt: now + WINDOW_MS });
     return false;
   }
   entry.count += 1;
-  rateLimit.set(key, entry);
-  return entry.count > RATE_LIMIT_MAX;
+  rateMap.set(id, entry);
+  return entry.count > MAX_REQUESTS;
 };
 
-export const POST: APIRoute = async ({ request, clientAddress }) => {
-  const apiKey = import.meta.env.OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
-
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: "Server missing OPENAI_API_KEY" }), {
-      status: 500,
-      headers: { "content-type": "application/json" },
-    });
-  }
-
-  if (isRateLimited(clientAddress || "unknown")) {
+export const POST: APIRoute = async ({ request }) => {
+  const clientId = getClientId(request);
+  if (isRateLimited(clientId)) {
     return new Response(JSON.stringify({ error: "Rate limit exceeded." }), {
       status: 429,
       headers: { "Content-Type": "application/json" },
@@ -64,8 +61,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (error) {
-    console.error("chat api error", error);
+  } catch {
     return new Response(JSON.stringify({ error: "Failed to generate response." }), {
       status: 500,
       headers: { "Content-Type": "application/json" },

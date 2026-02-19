@@ -1,100 +1,81 @@
 import OpenAI from "openai";
-import type { Chunk } from "./retrieval";
+import type { ChatLink, RagChunk } from "./types";
 
-export type ChatResponse = {
-  answer: string;
-  links: { href: string; label: string }[];
-  citations: { id: string; title: string; routeHint: string; excerpt: string }[];
-};
-
-const getApiKey = () => import.meta.env.OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
+const chatModel = import.meta.env.OPENAI_CHAT_MODEL ?? process.env.OPENAI_CHAT_MODEL ?? "gpt-4o-mini";
 
 let client: OpenAI | null = null;
-
 const getClient = () => {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new Error("Missing OPENAI_API_KEY");
-  }
-  if (!client) {
-    client = new OpenAI({ apiKey });
-  }
+  const key = import.meta.env.OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
+  if (!key) return null;
+  if (!client) client = new OpenAI({ apiKey: key });
   return client;
 };
 
-const chatModel =
-  import.meta.env.OPENAI_CHAT_MODEL ?? process.env.OPENAI_CHAT_MODEL ?? "gpt-4o-mini";
-
-const ALLOWLIST = new Map<string, string>([
-  ["/projects/fireside", "Fireside"],
-  ["/projects/goodies", "Goodies"],
-  ["/fit", "Fit"],
-  ["/system", "System"],
-  ["/about", "About"],
-]);
-
-const truncate = (text: string, max = 360) => {
-  if (text.length <= max) return text;
-  return `${text.slice(0, max).trim()}...`;
-};
-
-const buildLinks = (chunks: Chunk[]) => {
+const dedupeLinks = (chunks: RagChunk[]): ChatLink[] => {
   const seen = new Set<string>();
-  const links: { href: string; label: string }[] = [];
+  const links: ChatLink[] = [];
   for (const chunk of chunks) {
     const href = chunk.routeHint;
-    if (!ALLOWLIST.has(href) || seen.has(href)) continue;
+    if (!href || seen.has(href)) continue;
     seen.add(href);
-    links.push({ href, label: ALLOWLIST.get(href) || href });
+    links.push({ href, label: chunk.title });
+    if (links.length >= 4) break;
   }
-  return links.slice(0, 3);
+  return links;
 };
 
-const buildCitations = (chunks: Chunk[]) =>
-  chunks.slice(0, 3).map((chunk) => ({
-    id: chunk.id,
-    title: chunk.title,
-    routeHint: chunk.routeHint,
-    excerpt: truncate(chunk.text, 320),
-  }));
-
-const buildContext = (chunks: Chunk[]) =>
-  chunks
-    .slice(0, 5)
-    .map((chunk) => `[${chunk.id}] ${truncate(chunk.text, 500)}`)
+const fallbackAnswer = (message: string, chunks: RagChunk[]) => {
+  if (!chunks.length) {
+    return "I do not have grounded context for that yet. Try asking about Start Here, Proof Hub, writing, or the TollBit worker.";
+  }
+  const evidence = chunks
+    .slice(0, 3)
+    .map((chunk, idx) => `${idx + 1}. ${chunk.title}: ${chunk.text.slice(0, 180).trim()}...`)
     .join("\n");
 
-export const generateAnswer = async (query: string, chunks: Chunk[]): Promise<ChatResponse> => {
-  if (!chunks.length) {
+  return `Grounded summary for: \"${message}\"\n\n${evidence}`;
+};
+
+export const generateAnswer = async (message: string, chunks: RagChunk[]) => {
+  const links = dedupeLinks(chunks);
+  const openai = getClient();
+
+  if (!openai) {
     return {
-      answer: "I can answer about Fireside, Goodies, Fit, or System. Try one of the suggestions.",
-      links: [],
-      citations: [],
+      answer: fallbackAnswer(message, chunks),
+      links,
     };
   }
 
-  const systemPrompt =
-    "You are a concise assistant for terence.world. Answer using only the provided context. " +
-    "If the context is insufficient, say so and suggest where to look. Keep answers short.";
+  const context = chunks
+    .map((chunk, index) => `(${index + 1}) ${chunk.title} [${chunk.routeHint}]\n${chunk.text}`)
+    .join("\n\n");
 
-  const context = buildContext(chunks);
-  const userPrompt = `Context:\n${context}\n\nQuestion: ${query}`;
+  try {
+    const completion = await openai.chat.completions.create({
+      model: chatModel,
+      temperature: 0.2,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are Terence AI. Be concise, direct, and grounded in provided context. If uncertain, say so and point to likely pages.",
+        },
+        {
+          role: "user",
+          content: `Question: ${message}\n\nContext:\n${context}`,
+        },
+      ],
+    });
 
-  const completion = await getClient().chat.completions.create({
-    model: chatModel,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    temperature: 0.2,
-    max_tokens: 220,
-  });
-
-  const answer = completion.choices[0]?.message?.content?.trim() || "";
-
-  return {
-    answer: answer || "I can answer about Fireside, Goodies, Fit, or System. Try one of the suggestions.",
-    links: buildLinks(chunks),
-    citations: buildCitations(chunks),
-  };
+    return {
+      answer: completion.choices[0]?.message?.content?.trim() || fallbackAnswer(message, chunks),
+      links,
+    };
+  } catch {
+    return {
+      answer: fallbackAnswer(message, chunks),
+      links,
+    };
+  }
 };

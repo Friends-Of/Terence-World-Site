@@ -1,0 +1,59 @@
+---
+import Base from "../layouts/Base.astro";
+
+const intents = [
+  {
+    id: "hire-builder",
+    title: "I want to hire Terence to build",
+    body: "Go directly to flagship cases filtered for builder/operator signal.",
+    href: "/projects?hat=Builder",
+  },
+  {
+    id: "assess-product-lead",
+    title: "I want product strategy signal",
+    body: "Jump to writing and project evidence focused on product leadership.",
+    href: "/projects?hat=Product%20Leader",
+  },
+  {
+    id: "read-point-of-view",
+    title: "I want point-of-view writing",
+    body: "Open the chronological stream with tag filters.",
+    href: "/writing",
+  },
+  {
+    id: "ask-terence-ai",
+    title: "I want direct answers from Terence AI",
+    body: "Open chat and ask questions grounded in project and writing sources.",
+    href: "/?chat=open",
+  },
+];
+---
+
+<Base title="Start Here" description="Intent-based routing into projects, writing, and chat.">
+  <section class="panel">
+    <div class="meta">FR-01</div>
+    <h1>Start here by intent</h1>
+    <p>Select the reason you came. The next screen is optimized for that goal.</p>
+  </section>
+
+  <section class="grid grid-2" style="margin-top: 18px">
+    {intents.map((intent) => (
+      <a class="card card-link intent-card" data-intent={intent.id} href={intent.href}>
+        <h2>{intent.title}</h2>
+        <p>{intent.body}</p>
+      </a>
+    ))}
+  </section>
+
+  <script is:inline>
+    document.querySelectorAll(".intent-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        const intent = card.getAttribute("data-intent");
+        const target = card.getAttribute("href");
+        if (typeof window.__twSendTelemetry === "function") {
+          window.__twSendTelemetry("routing_intent_selected", { intent, target });
+        }
+      });
+    });
+  </script>
+</Base>

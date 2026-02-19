@@ -1,0 +1,61 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import { sortByDateDesc, uniqueTags, formatDate } from "../../utils/content";
+
+const posts = sortByDateDesc(await getCollection("writing"));
+const tags = uniqueTags(posts);
+---
+
+<Base title="Writing" description="Point-of-view writing stream in chronological order.">
+  <section class="panel">
+    <div class="meta">FR-03</div>
+    <h1>Point-of-View Writing Stream</h1>
+    <p>Chronological notes with tag filters and direct links back to project evidence.</p>
+    <div class="pill-row" id="tag-filters" style="margin-top: 12px">
+      <button class="pill" data-tag="all" data-state="active" type="button">All</button>
+      {tags.map((tag) => (
+        <button class="pill" data-tag={tag} type="button">#{tag}</button>
+      ))}
+    </div>
+  </section>
+
+  <section class="grid" style="margin-top: 18px" id="writing-grid">
+    {posts.map((post) => (
+      <article class="card writing-card" data-tags={post.data.tags.join("|")}>
+        <a class="card-link" href={`/writing/${post.slug}`}>
+          <p class="meta">{formatDate(post.data.publishedAt)}</p>
+          <h2>{post.data.title}</h2>
+          <p>{post.data.summary}</p>
+          <div class="pill-row">
+            {post.data.tags.map((tag) => (
+              <span class="pill">#{tag}</span>
+            ))}
+          </div>
+        </a>
+      </article>
+    ))}
+  </section>
+
+  <script is:inline>
+    const buttons = Array.from(document.querySelectorAll("#tag-filters [data-tag]"));
+    const cards = Array.from(document.querySelectorAll(".writing-card"));
+
+    const apply = (tag) => {
+      buttons.forEach((button) => {
+        button.dataset.state = button.dataset.tag === tag ? "active" : "inactive";
+      });
+      cards.forEach((card) => {
+        const tags = (card.getAttribute("data-tags") || "").split("|");
+        const visible = tag === "all" || tags.includes(tag);
+        card.style.display = visible ? "block" : "none";
+      });
+    };
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => apply(button.dataset.tag || "all"));
+    });
+  </script>
+</Base>
+
+

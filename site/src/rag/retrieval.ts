@@ -1,44 +1,39 @@
 import OpenAI from "openai";
 import indexData from "./index.json";
+import type { RagChunk, RagIndex } from "./types";
 
-export type Chunk = {
-  id: string;
-  title: string;
-  sourcePath: string;
-  routeHint: string;
-  text: string;
-  embedding: number[];
-};
-
-type RagIndex = {
-  version: number;
-  createdAt: string;
-  chunks: Chunk[];
-};
-
-const getApiKey = () => import.meta.env.OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
+const embedModel = import.meta.env.OPENAI_EMBED_MODEL ?? process.env.OPENAI_EMBED_MODEL ?? "text-embedding-3-small";
 
 let client: OpenAI | null = null;
-
 const getClient = () => {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new Error("Missing OPENAI_API_KEY");
-  }
-  if (!client) {
-    client = new OpenAI({ apiKey });
-  }
+  const key = import.meta.env.OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
+  if (!key) return null;
+  if (!client) client = new OpenAI({ apiKey: key });
   return client;
 };
 
-const embedModel =
-  import.meta.env.OPENAI_EMBED_MODEL ??
-  process.env.OPENAI_EMBED_MODEL ??
-  "text-embedding-3-small";
+const tokenize = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((token) => token.length >= 2);
 
-const normalize = (text: string) => text.replace(/\s+/g, " ").trim();
+const lexicalScore = (query: string, chunk: RagChunk) => {
+  const terms = tokenize(query);
+  if (!terms.length) return 0;
+  const tokenSet = new Set(chunk.tokens);
+  let score = 0;
+  for (const term of terms) {
+    if (tokenSet.has(term)) score += 1;
+  }
+  if (chunk.text.toLowerCase().includes(query.toLowerCase().slice(0, 42))) {
+    score += 1.25;
+  }
+  return score / Math.max(terms.length, 1);
+};
 
-const cosineSimilarity = (a: number[], b: number[]) => {
+const cosine = (a: number[], b: number[]) => {
   let dot = 0;
   let normA = 0;
   let normB = 0;
@@ -53,25 +48,39 @@ const cosineSimilarity = (a: number[], b: number[]) => {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 };
 
-export const embedQuery = async (text: string): Promise<number[]> => {
-  const cleaned = normalize(text).slice(0, 2000);
-  const response = await getClient().embeddings.create({
+const embedQuery = async (query: string): Promise<number[] | null> => {
+  const openai = getClient();
+  if (!openai) return null;
+  const response = await openai.embeddings.create({
     model: embedModel,
-    input: cleaned,
+    input: query.slice(0, 2000),
   });
-  return response.data[0].embedding;
+  return response.data[0]?.embedding ?? null;
 };
 
-export const search = async (query: string, k = 5): Promise<Chunk[]> => {
+export const search = async (query: string, k = 5): Promise<RagChunk[]> => {
   const index = indexData as RagIndex;
-  if (!index.chunks || index.chunks.length === 0) {
-    return [];
+  if (!index?.chunks?.length) return [];
+
+  const hasEmbeddings = index.chunks.some((chunk) => Array.isArray(chunk.embedding) && chunk.embedding.length > 0);
+
+  if (hasEmbeddings) {
+    const queryEmbedding = await embedQuery(query);
+    if (queryEmbedding) {
+      return [...index.chunks]
+        .map((chunk) => ({
+          chunk,
+          score: Array.isArray(chunk.embedding) ? cosine(queryEmbedding, chunk.embedding) : 0,
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, k)
+        .map((item) => item.chunk);
+    }
   }
-  const queryEmbedding = await embedQuery(query);
-  const scored = index.chunks.map((chunk) => ({
-    chunk,
-    score: cosineSimilarity(queryEmbedding, chunk.embedding),
-  }));
-  scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, k).map((item) => item.chunk);
+
+  return [...index.chunks]
+    .map((chunk) => ({ chunk, score: lexicalScore(query, chunk) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, k)
+    .map((item) => item.chunk);
 };

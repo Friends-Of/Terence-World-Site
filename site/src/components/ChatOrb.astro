@@ -1,0 +1,426 @@
+<div class="chat-orb-wrap">
+  <button class="chat-orb" type="button" aria-expanded="false" aria-controls="tw-chat-panel">
+    <span class="chat-orb__pulse" aria-hidden="true"></span>
+    <span class="chat-orb__label">Terence AI</span>
+  </button>
+
+  <aside id="tw-chat-panel" class="chat-panel" hidden>
+    <header class="chat-panel__head">
+      <h2>Terence AI</h2>
+      <button type="button" class="chat-panel__close" aria-label="Close chat">Close</button>
+    </header>
+
+    <div class="chat-panel__messages" aria-live="polite"></div>
+
+    <form class="chat-panel__composer">
+      <label class="sr-only" for="tw-chat-input">Ask Terence AI</label>
+      <input id="tw-chat-input" name="message" maxlength="2000" placeholder="Ask about a project, writing, or current focus..." required />
+      <button type="submit">Send</button>
+    </form>
+  </aside>
+</div>
+
+<style>
+  .chat-orb-wrap {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 30;
+  }
+
+  .chat-orb {
+    border: 1px solid rgba(163, 61, 46, 0.7);
+    border-radius: 999px;
+    background: rgba(255, 246, 241, 0.95);
+    color: #7d2a1e;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 12px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 18px 35px rgba(20, 30, 40, 0.2);
+  }
+
+  .chat-orb__pulse {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: #a33d2e;
+  }
+
+  .chat-panel {
+    width: min(420px, calc(100vw - 20px));
+    height: min(70vh, 620px);
+    border: 1px solid #cad4dc;
+    border-radius: 18px;
+    background: rgba(250, 249, 246, 0.98);
+    box-shadow: 0 26px 70px rgba(20, 30, 40, 0.24);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+
+  .chat-panel__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid #d5dde4;
+  }
+
+  .chat-panel__head h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-family: var(--font-display);
+  }
+
+  .chat-panel__close {
+    border: 1px solid #c9d1d9;
+    border-radius: 999px;
+    background: #fff;
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 8px;
+    cursor: pointer;
+  }
+
+  .chat-panel__messages {
+    overflow: auto;
+    padding: 14px;
+    display: grid;
+    gap: 10px;
+    align-content: start;
+  }
+
+  .msg {
+    border: 1px solid #dbe3ea;
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: #25384a;
+  }
+
+  .msg[data-role="user"] {
+    border-color: rgba(163, 61, 46, 0.36);
+    background: rgba(255, 243, 239, 0.95);
+  }
+
+  .msg__role {
+    margin: 0 0 6px;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #637284;
+  }
+
+  .msg__text {
+    margin: 0;
+    white-space: pre-wrap;
+  }
+
+  .msg__links {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 3px;
+  }
+
+  .msg__links a {
+    border-bottom: 1px solid rgba(43, 122, 103, 0.3);
+  }
+
+  .msg__feedback {
+    margin-top: 10px;
+    display: inline-flex;
+    gap: 6px;
+  }
+
+  .msg__feedback button {
+    border: 1px solid #cdd6dd;
+    background: #fff;
+    border-radius: 999px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 0.76rem;
+  }
+
+  .chat-panel__composer {
+    border-top: 1px solid #d5dde4;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+
+  .chat-panel__composer input {
+    border: 1px solid #cad5de;
+    border-radius: 10px;
+    padding: 10px;
+    font: inherit;
+  }
+
+  .chat-panel__composer button {
+    border: 1px solid #a33d2e;
+    background: #fff;
+    border-radius: 10px;
+    color: #a33d2e;
+    font-weight: 700;
+    padding: 8px 11px;
+    cursor: pointer;
+  }
+
+  .sr-only {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .chat-orb__pulse {
+      animation: pulse 1.8s ease infinite;
+    }
+
+    .chat-panel {
+      animation: panelIn 220ms ease both;
+    }
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(163, 61, 46, 0.4);
+    }
+    50% {
+      transform: scale(1.06);
+      box-shadow: 0 0 0 8px rgba(163, 61, 46, 0);
+    }
+  }
+
+  @keyframes panelIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+<script is:inline>
+  const wrap = document.querySelector(".chat-orb-wrap");
+  const orb = wrap?.querySelector(".chat-orb");
+  const panel = wrap?.querySelector(".chat-panel");
+  const closeBtn = wrap?.querySelector(".chat-panel__close");
+  const form = wrap?.querySelector(".chat-panel__composer");
+  const input = wrap?.querySelector("#tw-chat-input");
+  const messagesEl = wrap?.querySelector(".chat-panel__messages");
+
+  const storageKey = "tw.chat.transcript.v1";
+  const statsKey = "tw.chat.stats.v1";
+
+  const parseJson = (value, fallback) => {
+    try {
+      return JSON.parse(value || "");
+    } catch {
+      return fallback;
+    }
+  };
+
+  let transcript = parseJson(localStorage.getItem(storageKey), [
+    {
+      role: "assistant",
+      text: "Ask me anything about projects, writing, or what I am shipping now.",
+      links: [],
+    },
+  ]);
+
+  let stats = parseJson(localStorage.getItem(statsKey), {
+    userMessages: 0,
+    assistantReplies: 0,
+    eligibleSent: false,
+  });
+
+  const persist = () => {
+    localStorage.setItem(storageKey, JSON.stringify(transcript));
+    localStorage.setItem(statsKey, JSON.stringify(stats));
+  };
+
+  const telemetry = (event, properties = {}) => {
+    if (typeof window.__twSendTelemetry === "function") {
+      window.__twSendTelemetry(event, properties);
+    }
+  };
+
+  const eligibleChatSessions = () => (stats.userMessages >= 3 && stats.assistantReplies >= 1 ? 1 : 0);
+
+  const toFeedbackButtons = () => {
+    const wrapEl = document.createElement("div");
+    wrapEl.className = "msg__feedback";
+
+    const up = document.createElement("button");
+    up.type = "button";
+    up.textContent = "Thumb up";
+
+    const down = document.createElement("button");
+    down.type = "button";
+    down.textContent = "Thumb down";
+
+    const send = (value) => {
+      telemetry("thumb_feedback", {
+        value,
+        eligible_chat_sessions: eligibleChatSessions(),
+      });
+      up.disabled = true;
+      down.disabled = true;
+    };
+
+    up.addEventListener("click", () => send("up"));
+    down.addEventListener("click", () => send("down"));
+
+    wrapEl.append(up, down);
+    return wrapEl;
+  };
+
+  const appendMessage = (message, allowFeedback = false) => {
+    if (!messagesEl) return;
+    const block = document.createElement("article");
+    block.className = "msg";
+    block.dataset.role = message.role;
+
+    const role = document.createElement("p");
+    role.className = "msg__role";
+    role.textContent = message.role === "user" ? "You" : "Terence AI";
+
+    const text = document.createElement("p");
+    text.className = "msg__text";
+    text.textContent = message.text;
+
+    block.append(role, text);
+
+    if (Array.isArray(message.links) && message.links.length) {
+      const ul = document.createElement("ul");
+      ul.className = "msg__links";
+      for (const link of message.links) {
+        if (!link?.href || !link?.label) continue;
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = link.href;
+        a.textContent = link.label;
+        li.appendChild(a);
+        ul.appendChild(li);
+      }
+      block.appendChild(ul);
+    }
+
+    if (allowFeedback) {
+      block.appendChild(toFeedbackButtons());
+    }
+
+    messagesEl.appendChild(block);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  };
+
+  const render = () => {
+    if (!messagesEl) return;
+    messagesEl.innerHTML = "";
+    transcript.forEach((message) => appendMessage(message));
+  };
+
+  const setOpen = (open) => {
+    if (!panel || !orb) return;
+    panel.hidden = !open;
+    orb.setAttribute("aria-expanded", String(open));
+    if (open) input?.focus();
+  };
+
+  orb?.addEventListener("click", () => {
+    const next = panel?.hidden;
+    setOpen(Boolean(next));
+    if (next) telemetry("chat_orb_open", { source: "orb" });
+  });
+
+  closeBtn?.addEventListener("click", () => setOpen(false));
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!input || !input.value.trim()) return;
+
+    const userText = input.value.trim();
+    input.value = "";
+    const userMessage = { role: "user", text: userText, links: [] };
+    transcript.push(userMessage);
+    stats.userMessages += 1;
+    appendMessage(userMessage);
+    persist();
+
+    telemetry("chat_user_message", { message_length: userText.length });
+
+    const submitButton = form.querySelector("button[type='submit']");
+    if (submitButton) submitButton.disabled = true;
+
+    try {
+      const response = await fetch("/api/chat.json", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userText }),
+      });
+      const data = await response.json();
+      const text = response.ok
+        ? (typeof data.answer === "string" ? data.answer : "I could not generate an answer.")
+        : (typeof data.error === "string" ? data.error : "Request failed.");
+
+      const assistantMessage = {
+        role: "assistant",
+        text,
+        links: Array.isArray(data.links) ? data.links : [],
+      };
+      transcript.push(assistantMessage);
+      stats.assistantReplies += 1;
+      appendMessage(assistantMessage, true);
+
+      if (!stats.eligibleSent && stats.userMessages >= 3 && stats.assistantReplies >= 1) {
+        stats.eligibleSent = true;
+        telemetry("eligible_chat_sessions", {
+          eligible_chat_sessions: 1,
+          user_messages: stats.userMessages,
+          assistant_replies: stats.assistantReplies,
+        });
+      }
+
+      persist();
+    } catch {
+      const fallback = { role: "assistant", text: "Chat is temporarily unavailable.", links: [] };
+      transcript.push(fallback);
+      appendMessage(fallback);
+      persist();
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
+  });
+
+  render();
+
+  const url = new URL(window.location.href);
+  if (url.searchParams.get("chat") === "open") {
+    setOpen(true);
+    telemetry("chat_orb_open", { source: "query" });
+  }
+</script>
+
+

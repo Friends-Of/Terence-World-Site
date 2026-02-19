@@ -1,0 +1,69 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import { sortByDateDesc, uniqueRoleHats, formatDate } from "../../utils/content";
+
+const projects = sortByDateDesc(await getCollection("projects"));
+const hats = uniqueRoleHats(projects);
+---
+
+<Base title="Proof Hub" description="Flagship case files with role-hat filters.">
+  <section class="panel">
+    <div class="meta">FR-02</div>
+    <h1>Proof of Work Hub</h1>
+    <p>Filter by role hat and move from claim to evidence fast.</p>
+    <div class="pill-row" id="hat-filters" style="margin-top: 12px">
+      <button class="pill" data-hat="all" data-state="active" type="button">All</button>
+      {hats.map((hat) => (
+        <button class="pill" data-hat={hat} type="button">{hat}</button>
+      ))}
+    </div>
+  </section>
+
+  <section class="grid grid-3" style="margin-top: 18px" id="project-grid">
+    {projects.map((project) => (
+      <article class="card project-card" data-hats={project.data.roleHats.join("|")}>
+        <a class="card-link" href={`/projects/${project.slug}`}>
+          <p class="meta">{formatDate(project.data.publishedAt)}</p>
+          <h2>{project.data.title}</h2>
+          <p>{project.data.summary}</p>
+          <p><strong>{project.data.heroMetric}</strong></p>
+          <div class="pill-row">
+            {project.data.roleHats.map((hat) => (
+              <span class="pill">{hat}</span>
+            ))}
+          </div>
+        </a>
+      </article>
+    ))}
+  </section>
+
+  <script is:inline>
+    const buttons = Array.from(document.querySelectorAll("#hat-filters [data-hat]"));
+    const cards = Array.from(document.querySelectorAll(".project-card"));
+    const params = new URLSearchParams(window.location.search);
+
+    const applyFilter = (hat) => {
+      buttons.forEach((button) => {
+        button.dataset.state = button.dataset.hat === hat ? "active" : "inactive";
+      });
+      cards.forEach((card) => {
+        const hats = (card.getAttribute("data-hats") || "").split("|");
+        const visible = hat === "all" || hats.includes(hat);
+        card.style.display = visible ? "block" : "none";
+      });
+    };
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const hat = button.dataset.hat || "all";
+        applyFilter(hat);
+      });
+    });
+
+    const requested = params.get("hat");
+    applyFilter(requested && buttons.some((button) => button.dataset.hat === requested) ? requested : "all");
+  </script>
+</Base>
+
+
